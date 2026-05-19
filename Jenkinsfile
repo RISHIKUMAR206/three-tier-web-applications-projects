@@ -26,8 +26,8 @@ pipeline {
 
         stage('3. Docker Web App Deployment') {
             steps {
-                echo 'Stopping older containers if any...'
-                sh 'sudo docker compose down || true'
+                echo 'Stopping and cleaning any existing containers...'
+                sh 'sudo docker compose down --remove-orphans || true'
                 echo 'Building fresh 3-Tier Docker Images...'
                 sh 'sudo docker compose up -d --build'
             }
