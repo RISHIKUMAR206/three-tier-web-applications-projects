@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        PROJECT_NAME = 'rishi-3-tier-project'
-    }
-
     stages {
         stage('1. Git Checkout') {
             steps {
@@ -13,7 +9,14 @@ pipeline {
             }
         }
 
-        stage('2. Terraform Quality Check') {
+        stage('2. SonarQube Code Analysis') {
+            steps {
+                echo 'Running Local SonarQube Code Scan...'
+                sh 'docker run --rm --network="host" -v "$(pwd):/usr/src" sonarsource/sonar-scanner-cli || true'
+            }
+        }
+
+        stage('3. Terraform Quality Check') {
             steps {
                 dir('terraform') {
                     echo 'Initializing Terraform Modules...'
@@ -24,7 +27,7 @@ pipeline {
             }
         }
 
-        stage('3. Docker Web App Deployment') {
+        stage('4. Docker Web App Deployment') {
             steps {
                 echo 'Stopping and cleaning any existing containers...'
                 sh 'sudo docker compose down --remove-orphans || true'
@@ -32,21 +35,11 @@ pipeline {
                 sh 'sudo docker compose up -d --build'
             }
         }
-
-        stage('4. Verification Status') {
-            steps {
-                echo 'Checking live container status...'
-                sh 'sudo docker ps'
-            }
-        }
     }
 
     post {
         success {
-            echo 'Boom! Rishi your End-to-End DevOps Pipeline executed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check stage logs for errors.'
+            echo 'Boom! Rishi your End-to-End DevOps Pipeline with SonarQube executed successfully!'
         }
     }
 }
